@@ -50,6 +50,8 @@ CELL_SIZE = 30
 
 class Player:
     def __init__(self):
+        self.velocidad = 1.0  # Velocidad inicial
+        self.x = 0
         self.x = 14 * CELL_SIZE
         self.y = 17 * CELL_SIZE
         self.radius = 12
@@ -100,9 +102,14 @@ class Player:
         if 0 <= row < len(MAP) and 0 <= col < len(MAP[0]):
             return MAP[row][col] != 1
         return False
+    
+    def mover(self):
+        self.x += self.velocidad
 
 class Ghost:
     def __init__(self, color, col, row):
+        self.velocidad = 1.0
+        self.x = 0
         self.color = color
         self.x = col * CELL_SIZE
         self.y = row * CELL_SIZE
@@ -122,33 +129,6 @@ class Ghost:
         self.direction = random.choice(["up", "down", "left", "right"])
         self.scared = False
         self.scared_time = 0
-
-    def move(self, player):
-        if self.scared:
-            self.scared_time -= 1
-            if self.scared_time <= 0:
-                self.scared = False
-
-        directions = ["up", "down", "left", "right"]
-        random.shuffle(directions)
-
-        for direction in directions:
-            if self.can_move(direction):
-                self.direction = direction
-                break
-
-        dx, dy = 0, 0
-        if self.direction == "up":
-            dy = -self.speed
-        elif self.direction == "down":
-            dy = self.speed
-        elif self.direction == "left":
-            dx = -self.speed
-        elif self.direction == "right":
-            dx = self.speed
-
-        self.x += dx
-        self.y += dy
 
     def can_move(self, direction):
         dx, dy = 0, 0
@@ -170,6 +150,66 @@ class Ghost:
         if 0 <= row < len(MAP) and 0 <= col < len(MAP[0]):
             return MAP[row][col] != 1
         return False
+
+    def move(self, player):
+        if self.scared:
+            self.scared_time -= 1
+            if self.scared_time <= 0:
+                self.scared = False
+
+        directions = ["up", "down", "left", "right"]
+        best_direction = None
+        best_distance = None
+
+        for direction in directions:
+            if self.can_move(direction):
+                dx, dy = 0, 0
+                if direction == "up":
+                    dy = -self.speed
+                elif direction == "down":
+                    dy = self.speed
+                elif direction == "left":
+                    dx = -self.speed
+                elif direction == "right":
+                    dx = self.speed
+
+                new_x = self.x + dx
+                new_y = self.y + dy
+
+                # Distancia al jugador
+                distance = ((player.x - new_x) ** 2 + (player.y - new_y) ** 2) ** 0.5
+
+                if best_distance is None:
+                    best_distance = distance
+                    best_direction = direction
+                else:
+                    if self.scared:
+                        if distance > best_distance:
+                            best_distance = distance
+                            best_direction = direction
+                    else:
+                        if distance < best_distance:
+                            best_distance = distance
+                            best_direction = direction
+
+        if best_direction:
+            self.direction = best_direction
+
+        dx, dy = 0, 0
+        if self.direction == "up":
+            dy = -self.speed
+        elif self.direction == "down":
+            dy = self.speed
+        elif self.direction == "left":
+            dx = -self.speed
+        elif self.direction == "right":
+            dx = self.speed
+
+        self.x += dx
+        self.y += dy
+
+    def mover(self):
+        self.x += self.velocidad
 
 class Game:
     def __init__(self):
@@ -264,6 +304,38 @@ class Game:
             self.handle_events()
             self.update()
             self.draw()
+
+    def calcular_derivada(self, puntuacion, tiempo_actual):
+        delta_puntos = puntuacion - self.puntuacion_anterior
+        delta_tiempo = tiempo_actual - self.tiempo_anterior
+        if delta_tiempo > 0:
+            derivada = delta_puntos / delta_tiempo
+        else:
+            derivada = 0
+        
+        # Guardamos los valores actuales para el próximo cálculo
+        self.puntuacion_anterior = puntuacion
+        self.tiempo_anterior = tiempo_actual
+        return derivada
+
+    def calcular_velocidad(self, puntuacion, tiempo_actual):
+        derivada = self.calcular_derivada(puntuacion, tiempo_actual)
+        velocidad_base = 1.0
+        velocidad_maxima = 5.0
+        velocidad = velocidad_base + (derivada * 0.1)
+        return min(velocidad, velocidad_maxima)
+    
+    def actualizar(self):
+        
+        self.puntuacion += 10  
+        tiempo_actual = pygame.time.get_ticks() / 1000  
+        nueva_velocidad = self.calcular_velocidad(self.puntuacion, tiempo_actual)
+        
+        self.jugador.velocidad = nueva_velocidad
+        for fantasma in self.fantasmas:
+            fantasma.velocidad = nueva_velocidad
+
+    
 
 # Ejecutar el juego
 if __name__ == "__main__":
