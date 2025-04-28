@@ -1,2 +1,2 @@
-# Pac-Pizza
+# Nam-Cap
 Proyecto de aula de Análisis Numérico
