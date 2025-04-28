@@ -2,6 +2,7 @@ import pygame
 import random
 import math
 import sys
+from datetime import datetime
 
 # Inicializar Pygame
 pygame.init()
@@ -9,7 +10,7 @@ pygame.init()
 # Configuración de la pantalla
 WIDTH, HEIGHT = 600, 650
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("nombre del juego ")
+pygame.display.set_caption("Nam-Cap")
 
 # Colores
 BLACK = (0, 0, 0)
@@ -50,12 +51,11 @@ CELL_SIZE = 30
 
 class Player:
     def __init__(self):
-        self.velocidad = 2.0  # Velocidad inicial
-        self.current_speed= self.velocidad
+        self.base_speed = 2.0  # Velocidad base
+        self.current_speed = self.base_speed
         self.x = 14 * CELL_SIZE
         self.y = 17 * CELL_SIZE
         self.radius = 12
-        self.speed = 2
         self.direction = "left"
         self.next_direction = "left"
 
@@ -67,7 +67,7 @@ class Player:
         self.y = 17 * CELL_SIZE
         self.direction = "left"
         self.next_direction = "left"
-        self.corrent_speed = self.velocidad # Resetear velocidad al morir
+        self.current_speed = self.base_speed  # Resetear velocidad al morir
 
     def move(self):
         if self.can_move(self.next_direction):
@@ -75,24 +75,24 @@ class Player:
 
         if self.can_move(self.direction):
             if self.direction == "up":
-                self.y -= self.speed
+                self.y -= self.current_speed
             elif self.direction == "down":
-                self.y += self.speed
+                self.y += self.current_speed
             elif self.direction == "left":
-                self.x -= self.speed
+                self.x -= self.current_speed
             elif self.direction == "right":
-                self.x += self.speed
+                self.x += self.current_speed
 
     def can_move(self, direction):
         dx, dy = 0, 0
         if direction == "up":
-            dy = -self.speed
+            dy = -self.current_speed
         elif direction == "down":
-            dy = self.speed
+            dy = self.current_speed
         elif direction == "left":
-            dx = -self.speed
+            dx = -self.current_speed
         elif direction == "right":
-            dx = self.speed
+            dx = self.current_speed
 
         new_x = self.x + dx
         new_y = self.y + dy
@@ -103,20 +103,19 @@ class Player:
         if 0 <= row < len(MAP) and 0 <= col < len(MAP[0]):
             return MAP[row][col] != 1
         return False
-    
+
     def update_speed(self, speed_multiplier):
-        # Ajustar la velocidad segun el multiplicador 
-        self.current_speed= self.velocidad * speed_multiplier
+        # Ajustar velocidad según el multiplicador
+        self.current_speed = self.base_speed * speed_multiplier
 
 class Ghost:
     def __init__(self, color, col, row):
-        self.velocidad = 0.5
-        self.x = 0
+        self.base_speed = 0.5  # Velocidad base más lenta que el jugador
+        self.current_speed = self.base_speed
         self.color = color
         self.x = col * CELL_SIZE
         self.y = row * CELL_SIZE
         self.radius = 12
-        self.speed = 0.5
         self.direction = random.choice(["up", "down", "left", "right"])
         self.scared = False
         self.scared_time = 0
@@ -136,13 +135,13 @@ class Ghost:
     def can_move(self, direction):
         dx, dy = 0, 0
         if direction == "up":
-            dy = -self.speed
+            dy = -self.current_speed
         elif direction == "down":
-            dy = self.speed
+            dy = self.current_speed
         elif direction == "left":
-            dx = -self.speed
+            dx = -self.current_speed
         elif direction == "right":
-            dx = self.speed
+            dx = self.current_speed
 
         new_x = self.x + dx
         new_y = self.y + dy
@@ -159,7 +158,7 @@ class Ghost:
             self.scared_time -= 1
             if self.scared_time <= 0:
                 self.scared = False
-                 # Recuperar velocidad normal al dejar de estar asustado
+                # Recuperar velocidad normal al dejar de estar asustado
                 self.current_speed = self.base_speed * game.speed_multiplier
 
         directions = ["up", "down", "left", "right"]
@@ -170,13 +169,13 @@ class Ghost:
             if self.can_move(direction):
                 dx, dy = 0, 0
                 if direction == "up":
-                    dy = -self.speed
+                    dy = -self.current_speed
                 elif direction == "down":
-                    dy = self.speed
+                    dy = self.current_speed
                 elif direction == "left":
-                    dx = -self.speed
+                    dx = -self.current_speed
                 elif direction == "right":
-                    dx = self.speed
+                    dx = self.current_speed
 
                 new_x = self.x + dx
                 new_y = self.y + dy
@@ -202,13 +201,13 @@ class Ghost:
 
         dx, dy = 0, 0
         if self.direction == "up":
-            dy = -self.speed
+            dy = -self.current_speed
         elif self.direction == "down":
-            dy = self.speed
+            dy = self.current_speed
         elif self.direction == "left":
-            dx = -self.speed
+            dx = -self.current_speed
         elif self.direction == "right":
-            dx = self.speed
+            dx = self.current_speed
 
         self.x += dx
         self.y += dy
@@ -232,7 +231,7 @@ class Game:
         self.lives = 3
         self.font = pygame.font.SysFont(None, 30)
         
-         # Para el cálculo de la derivada
+        # Para el cálculo de la derivada
         self.last_score = 0
         self.last_time = pygame.time.get_ticks() / 1000  # Convertir a segundos
         self.speed_multiplier = 1.0  # Multiplicador de velocidad inicial
@@ -241,7 +240,6 @@ class Game:
         self.debug_font = pygame.font.SysFont(None, 20)
         self.derivative_value = 0
 
-
     def draw_map(self):
         for row_index, row in enumerate(MAP):
             for col_index, cell in enumerate(row):
@@ -249,7 +247,6 @@ class Game:
                 y = row_index * CELL_SIZE
                 if cell == 1:
                     pygame.draw.rect(screen, BLUE, (x, y, CELL_SIZE, CELL_SIZE))
-                    
                 elif cell == 2:
                     pygame.draw.circle(screen, WHITE, (x + CELL_SIZE // 2, y + CELL_SIZE // 2), 3)
                 elif cell == 3:
@@ -259,6 +256,7 @@ class Game:
         score_text = self.font.render(f"Puntos: {self.score}", True, WHITE)
         lives_text = self.font.render(f"Vidas: {self.lives}", True, WHITE)
         speed_text = self.font.render(f"Velocidad: x{self.speed_multiplier:.1f}", True, WHITE)
+        
         screen.blit(score_text, (10, HEIGHT - 40))
         screen.blit(lives_text, (WIDTH - 100, HEIGHT - 40))
         screen.blit(speed_text, (WIDTH // 2 - 50, HEIGHT - 40))
@@ -280,7 +278,7 @@ class Game:
             for ghost in self.ghosts:
                 ghost.scared = True
                 ghost.scared_time = 300
-                ghost.current_speed = ghost.velocidad * 0.7 # Reducir velocidad cuando están asustados
+                ghost.current_speed = ghost.base_speed * 0.7  # Reducir velocidad cuando están asustados
 
         for ghost in self.ghosts:
             distance = math.hypot(self.player.x - ghost.x, self.player.y - ghost.y)
@@ -291,9 +289,11 @@ class Game:
                 else:
                     self.lives -= 1
                     self.player.reset_position()
+                    for g in self.ghosts:
+                        g.reset_position()
                     if self.lives <= 0:
                         self.running = False
-                        
+
     def calculate_derivative(self):
         current_time = pygame.time.get_ticks() / 1000  # Tiempo actual en segundos
         delta_time = current_time - self.last_time
@@ -309,7 +309,7 @@ class Game:
             # Ajustar el multiplicador de velocidad basado en la derivada
             # La velocidad aumenta con la derivada, pero con límites
             base_multiplier = 1.0
-            max_multiplier = 3.5  # Velocidad máxima 2.5x la normal
+            max_multiplier = 2.5  # Velocidad máxima 2.5x la normal
             
             # La derivada puede ser alta al principio cuando se comen muchos puntos rápidamente
             # Normalizamos el efecto de la derivada
@@ -340,12 +340,14 @@ class Game:
                     self.player.next_direction = "right"
 
     def update(self):
-         # Calcular derivada y ajustar velocidades
+        # Calcular derivada y ajustar velocidades
         self.calculate_derivative()
+        
         # Mover personajes
         self.player.move()
         for ghost in self.ghosts:
             ghost.move(self.player)
+        
         # Verificar colisiones
         self.check_collisions()
 
@@ -364,38 +366,6 @@ class Game:
             self.handle_events()
             self.update()
             self.draw()
-
-    # def calcular_derivada(self, puntuacion, tiempo_actual):
-    #     delta_puntos = puntuacion - self.puntuacion_anterior
-    #     delta_tiempo = tiempo_actual - self.tiempo_anterior
-    #     if delta_tiempo > 0:
-    #         derivada = delta_puntos / delta_tiempo
-    #     else:
-    #         derivada = 0
-        
-    #     # Guardamos los valores actuales para el próximo cálculo
-    #     self.puntuacion_anterior = puntuacion
-    #     self.tiempo_anterior = tiempo_actual
-    #     return derivada
-
-    # def calcular_velocidad(self, puntuacion, tiempo_actual):
-    #     derivada = self.calcular_derivada(puntuacion, tiempo_actual)
-    #     velocidad_base = 1.0
-    #     velocidad_maxima = 5.0
-    #     velocidad = velocidad_base + (derivada * 0.1)
-    #     return min(velocidad, velocidad_maxima)
-    
-    # def actualizar(self):
-        
-    #     self.puntuacion += 10  
-    #     tiempo_actual = pygame.time.get_ticks() / 1000  
-    #     nueva_velocidad = self.calcular_velocidad(self.puntuacion, tiempo_actual)
-        
-    #     self.jugador.velocidad = nueva_velocidad
-    #     for fantasma in self.fantasmas:
-    #         fantasma.velocidad = nueva_velocidad
-
-    
 
 # Ejecutar el juego
 if __name__ == "__main__":
