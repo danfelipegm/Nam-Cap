@@ -2,547 +2,266 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nam-Pac</title>
+    <title>Nam-Cap (HTML5)</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        h1 {
-            color: #FFD700;
-            text-align: center;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        
-        .game-section {
-            background-color: #1E1E1E;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        }
-        
-        .btn {
-            background-color: #FFD700;
-            color: #121212;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1.1em;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            display: inline-block;
-            margin: 10px 5px;
-            text-decoration: none;
-        }
-        
-        .btn:hover {
-            background-color: #FFC000;
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-        }
-        
-        .btn-download {
-            background-color: #4CAF50;
-        }
-        
-        .btn-download:hover {
-            background-color: #45a049;
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.7);
-        }
-        
         canvas {
+            background-color: black;
             display: block;
-            margin: 20px auto;
+            margin: auto;
+            margin-top: 20px;
+        }
+        body {
             background-color: #000;
-            border-radius: 5px;
-        }
-        
-        .controls {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .key {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: #333;
             color: white;
-            border-radius: 5px;
+            font-family: Arial, sans-serif;
             text-align: center;
-            line-height: 40px;
-            margin: 0 5px;
-            font-weight: bold;
-        }
-        
-        .features {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin: 30px 0;
-        }
-        
-        .feature {
-            flex-basis: 30%;
-            background-color: #252525;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        
-        @media (max-width: 768px) {
-            .feature {
-                flex-basis: 100%;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Nam-Pac</h1>
-        
-        <div class="game-section">
-            <h2>Juega Ahora</h2>
-            <p>Controla a Pac-Man y recolecta todos los puntos mientras evitas a los fantasmas. ¡Usa los power-ups para volverlos vulnerables!</p>
-            
-            <!-- Canvas para el juego simplificado en JavaScript -->
-            <canvas id="gameCanvas" width="600" height="650"></canvas>
-            
-            <div class="controls">
-                <p>Controles:</p>
-                <div><span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span></div>
-                <p>Usa las flechas del teclado para mover a Pac-Man</p>
-            </div>
-            
-            <div id="gameStats" style="text-align: center; margin: 20px 0;">
-                <p>Puntos: <span id="score">0</span> | Vidas: <span id="lives">3</span></p>
-            </div>
-        </div>
-        
-        <div class="game-section">
-            <h2>Características del Juego</h2>
-            <div class="features">
-                <div class="feature">
-                    <h3>Velocidad variable</h3>
-                    <p>Los fantasmas aumentan su velocidad según tu desempeño, haciendo el juego más desafiante.</p>
-                </div>
-                <div class="feature">
-                    <h3>Power-Ups</h3>
-                    <p>Recoge los power-ups para volver a los fantasmas vulnerables y ganar puntos extra.</p>
-                </div>
-                <div class="feature">
-                    <h3>Sistema de Puntuación</h3>
-                    <p>Diferentes puntos por comer fantasmas, puntos normales y power-ups.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+    <h1>Nam-Cap</h1>
+    <canvas id="gameCanvas" width="600" height="650"></canvas>
 
     <script>
-        // Código para el juego simplificado en JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            // Configuración del juego
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            const scoreElement = document.getElementById('score');
-            const livesElement = document.getElementById('lives');
-            
-            // Configuración del juego
-            const CELL_SIZE = 30;
-            const WIDTH = canvas.width;
-            const HEIGHT = canvas.height;
-            
-            // Colores
-            const BLACK = '#000000';
-            const YELLOW = '#FFFF00';
-            const WHITE = '#FFFFFF';
-            const BLUE = '#0000FF';
-            const RED = '#FF0000';
-            const PINK = '#FFB8FF';
-            const CYAN = '#00FFFF';
-            const SCARED_COLOR = '#6464FF';
-            
-            // Mapa simplificado (1 = pared, 0 = camino, 2 = punto, 3 = power-up)
-            const MAP = [
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-                [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
-                [1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1],
-                [1,3,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,3,1],
-                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-                [1,2,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,2,1],
-                [1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1],
-                [1,1,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,1,1],
-                [1,2,3,2,2,1,2,2,2,2,2,2,2,2,1,2,2,3,2,1],
-                [1,1,2,1,2,1,2,1,1,0,0,1,1,2,1,2,1,2,1,1],
-                [1,2,2,2,2,2,2,1,0,0,0,0,1,2,2,2,2,2,2,1],
-                [1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1],
-                [1,2,2,2,2,1,2,2,2,0,0,2,2,2,1,2,2,2,2,1],
-                [1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1],
-                [1,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,1],
-                [1,1,2,1,2,1,2,1,1,0,0,1,2,1,2,1,2,1,1,1],
-                [1,2,2,2,2,1,2,2,2,0,1,2,2,2,2,2,2,2,2,1],
-                [1,3,1,1,1,1,1,1,2,0,1,2,1,1,1,0,1,1,3,1],
-                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
-                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-            ];
-            
-            // Variables del juego
-            let score = 0;
-            let lives = 3;
-            let gameOver = false;
-            
-            // Clase Player simplificada
-            class Player {
-                constructor() {
-                    this.x = 14 * CELL_SIZE;
-                    this.y = 17 * CELL_SIZE;
-                    this.radius = 12;
-                    this.speed = 2;
-                    this.direction = "left";
-                    this.nextDirection = "left";
-                }
-                
-                draw() {
-                    ctx.fillStyle = YELLOW;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Boca de Pac-Man
-                    let startAngle, endAngle;
-                    switch(this.direction) {
-                        case "right":
-                            startAngle = 0.2 * Math.PI;
-                            endAngle = 1.8 * Math.PI;
-                            break;
-                        case "down":
-                            startAngle = 0.7 * Math.PI;
-                            endAngle = 2.3 * Math.PI;
-                            break;
-                        case "left":
-                            startAngle = 1.2 * Math.PI;
-                            endAngle = 2.8 * Math.PI;
-                            break;
-                        case "up":
-                            startAngle = -0.3 * Math.PI;
-                            endAngle = 1.3 * Math.PI;
-                            break;
-                    }
-                    
-                    ctx.fillStyle = BLACK;
-                    ctx.beginPath();
-                    ctx.moveTo(this.x, this.y);
-                    ctx.arc(this.x, this.y, this.radius, startAngle, endAngle);
-                    ctx.lineTo(this.x, this.y);
-                    ctx.fill();
-                }
-                
-                canMove(direction) {
-                    let dx = 0, dy = 0;
-                    if (direction === "up") dy = -this.speed;
-                    else if (direction === "down") dy = this.speed;
-                    else if (direction === "left") dx = -this.speed;
-                    else if (direction === "right") dx = this.speed;
-                    
-                    const newX = this.x + dx;
-                    const newY = this.y + dy;
-                    
-                    const col = Math.floor(newX / CELL_SIZE);
-                    const row = Math.floor(newY / CELL_SIZE);
-                    
-                    if (row >= 0 && row < MAP.length && col >= 0 && col < MAP[0].length) {
-                        return MAP[row][col] !== 1;
-                    }
-                    return false;
-                }
-                
-                move() {
-                    if (this.canMove(this.nextDirection)) {
-                        this.direction = this.nextDirection;
-                    }
-                    
-                    if (this.canMove(this.direction)) {
-                        if (this.direction === "up") this.y -= this.speed;
-                        else if (this.direction === "down") this.y += this.speed;
-                        else if (this.direction === "left") this.x -= this.speed;
-                        else if (this.direction === "right") this.x += this.speed;
-                    }
-                    
-                    // Teletransporte entre túneles
-                    if (this.x < 0) this.x = WIDTH;
-                    else if (this.x > WIDTH) this.x = 0;
-                }
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const CELL_SIZE = 30;
+    const WIDTH = 600;
+    const HEIGHT = 650;
+
+    const COLORS = {
+        wall: 'blue',
+        dot: 'white',
+        powerUp: 'white',
+        player: 'yellow',
+        scaredGhost: 'rgb(100,100,255)',
+        ghosts: ['red', 'pink', 'cyan']
+    };
+
+    // Mapa
+    let MAP = [
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
+        [1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1],
+        [1,3,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,3,1],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [1,2,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,2,1],
+        [1,2,2,2,2,1,2,2,2,1,1,2,2,2,1,2,2,2,2,1],
+        [1,1,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,1,1],
+        [1,2,3,2,2,1,2,2,2,2,2,2,2,2,1,2,2,3,2,1],
+        [1,1,2,1,2,1,2,1,1,0,0,1,1,2,1,2,1,2,1,1],
+        [1,2,2,2,2,2,2,1,0,0,0,0,1,2,2,2,2,2,2,1],
+        [1,1,1,1,2,1,2,1,1,1,1,1,1,2,1,2,1,1,1,1],
+        [1,2,2,2,2,1,2,2,2,0,0,2,2,2,1,2,2,2,2,1],
+        [1,2,1,1,2,1,1,1,2,1,1,2,1,1,1,2,1,1,2,1],
+        [1,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,1],
+        [1,1,2,1,2,1,2,1,1,0,0,1,2,1,2,1,2,1,1,1],
+        [1,2,2,2,2,1,2,2,2,0,1,2,2,2,2,2,2,2,2,1],
+        [1,3,1,1,1,1,1,1,2,0,1,2,1,1,1,0,1,1,3,1],
+        [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+        [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ];
+
+    // Copia inicial del mapa para reiniciar monedas
+    const INITIAL_MAP = JSON.parse(JSON.stringify(MAP));
+
+    let score = 0;
+    let lives = 3;
+
+    let player = {
+        x: 14 * CELL_SIZE,
+        y: 17 * CELL_SIZE,
+        radius: 12,
+        direction: 'left',
+        speed: 2.0
+    };
+
+    let ghosts = [
+        { x: 9 * CELL_SIZE, y: 7 * CELL_SIZE, radius: 12, direction: 'up', speed: 1.0, color: COLORS.ghosts[0], scared: false },
+        { x: 10 * CELL_SIZE, y: 7 * CELL_SIZE, radius: 12, direction: 'down', speed: 1.0, color: COLORS.ghosts[1], scared: false },
+        { x: 9 * CELL_SIZE, y: 8 * CELL_SIZE, radius: 12, direction: 'left', speed: 1.0, color: COLORS.ghosts[2], scared: false }
+    ];
+
+    // Inputs
+    let keys = {};
+
+    document.addEventListener('keydown', e => {
+        keys[e.key] = true;
+    });
+    document.addEventListener('keyup', e => {
+        keys[e.key] = false;
+    });
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+        movePlayer();
+        moveGhosts();
+        checkCollisions();
+        updateSpeedBasedOnScore();
+        if (noDotsLeft()) resetMap();
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        drawMap();
+        drawPlayer();
+        drawGhosts();
+        drawUI();
+    }
+
+    function movePlayer() {
+        let dir = {x:0, y:0};
+        if (keys['ArrowUp']) dir.y = -1;
+        if (keys['ArrowDown']) dir.y = 1;
+        if (keys['ArrowLeft']) dir.x = -1;
+        if (keys['ArrowRight']) dir.x = 1;
+
+        let newX = player.x + dir.x * player.speed;
+        let newY = player.y + dir.y * player.speed;
+
+        if (!isWall(newX, newY)) {
+            player.x = newX;
+            player.y = newY;
+        }
+    }
+
+    function moveGhosts() {
+        ghosts.forEach(ghost => {
+            let dx = player.x - ghost.x;
+            let dy = player.y - ghost.y;
+            let distance = Math.sqrt(dx*dx + dy*dy);
+
+            let dir = {x: 0, y: 0};
+            if (ghost.scared) {
+                dir.x = (dx > 0) ? -1 : 1;
+                dir.y = (dy > 0) ? -1 : 1;
+            } else {
+                dir.x = (dx > 0) ? 1 : -1;
+                dir.y = (dy > 0) ? 1 : -1;
             }
-            
-            // Clase Ghost simplificada
-            class Ghost {
-                constructor(color, col, row) {
-                    this.color = color;
-                    this.x = col * CELL_SIZE;
-                    this.y = row * CELL_SIZE;
-                    this.radius = 12;
-                    this.speed = 1;
-                    this.direction = this.randomDirection();
-                    this.scared = false;
-                }
-                
-                randomDirection() {
-                    const directions = ["up", "down", "left", "right"];
-                    return directions[Math.floor(Math.random() * directions.length)];
-                }
-                
-                draw() {
-                    ctx.fillStyle = this.scared ? SCARED_COLOR : this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Ojos de fantasma
-                    ctx.fillStyle = WHITE;
-                    ctx.beginPath();
-                    ctx.arc(this.x - 5, this.y - 3, 3, 0, Math.PI * 2);
-                    ctx.arc(this.x + 5, this.y - 3, 3, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Pupilas
-                    ctx.fillStyle = BLACK;
-                    ctx.beginPath();
-                    ctx.arc(this.x - 5, this.y - 3, 1.5, 0, Math.PI * 2);
-                    ctx.arc(this.x + 5, this.y - 3, 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                
-                canMove(direction) {
-                    let dx = 0, dy = 0;
-                    if (direction === "up") dy = -this.speed;
-                    else if (direction === "down") dy = this.speed;
-                    else if (direction === "left") dx = -this.speed;
-                    else if (direction === "right") dx = this.speed;
-                    
-                    const newX = this.x + dx;
-                    const newY = this.y + dy;
-                    
-                    const col = Math.floor(newX / CELL_SIZE);
-                    const row = Math.floor(newY / CELL_SIZE);
-                    
-                    if (row >= 0 && row < MAP.length && col >= 0 && col < MAP[0].length) {
-                        return MAP[row][col] !== 1;
-                    }
-                    return false;
-                }
-                
-                move(player) {
-                    // Movimiento aleatorio simplificado
-                    if (Math.random() < 0.02 || !this.canMove(this.direction)) {
-                        const directions = ["up", "down", "left", "right"];
-                        const possibleDirections = directions.filter(dir => this.canMove(dir));
-                        if (possibleDirections.length > 0) {
-                            this.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
-                        }
-                    }
-                    
-                    if (this.direction === "up") this.y -= this.speed;
-                    else if (this.direction === "down") this.y += this.speed;
-                    else if (this.direction === "left") this.x -= this.speed;
-                    else if (this.direction === "right") this.x += this.speed;
-                    
-                    // Teletransporte entre túneles
-                    if (this.x < 0) this.x = WIDTH;
-                    else if (this.x > WIDTH) this.x = 0;
-                }
+
+            let newX = ghost.x + dir.x * ghost.speed;
+            let newY = ghost.y + dir.y * ghost.speed;
+
+            if (!isWall(newX, newY)) {
+                ghost.x = newX;
+                ghost.y = newY;
             }
-            
-            // Inicializar jugador y fantasmas
-            const player = new Player();
-            const ghosts = [
-                new Ghost(RED, 9, 7),
-                new Ghost(PINK, 10, 7),
-                new Ghost(CYAN, 9, 8)
-            ];
-            
-            // Manejadores de teclado
-            const keys = {};
-            document.addEventListener('keydown', (e) => {
-                keys[e.key] = true;
-                
-                if (e.key === 'ArrowUp') player.nextDirection = "up";
-                else if (e.key === 'ArrowDown') player.nextDirection = "down";
-                else if (e.key === 'ArrowLeft') player.nextDirection = "left";
-                else if (e.key === 'ArrowRight') player.nextDirection = "right";
-            });
-            
-            document.addEventListener('keyup', (e) => {
-                keys[e.key] = false;
-            });
-            
-            // Función para dibujar el mapa
-            function drawMap() {
-                for (let row = 0; row < MAP.length; row++) {
-                    for (let col = 0; col < MAP[row].length; col++) {
-                        const x = col * CELL_SIZE;
-                        const y = row * CELL_SIZE;
-                        
-                        if (MAP[row][col] === 1) {
-                            ctx.fillStyle = BLUE;
-                            ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
-                        } else if (MAP[row][col] === 2) {
-                            ctx.fillStyle = WHITE;
-                            ctx.beginPath();
-                            ctx.arc(x + CELL_SIZE/2, y + CELL_SIZE/2, 3, 0, Math.PI * 2);
-                            ctx.fill();
-                        } else if (MAP[row][col] === 3) {
-                            ctx.fillStyle = WHITE;
-                            ctx.beginPath();
-                            ctx.arc(x + CELL_SIZE/2, y + CELL_SIZE/2, 6, 0, Math.PI * 2);
-                            ctx.fill();
-                        }
-                    }
-                }
-            }
-            
-            // Función para verificar colisiones
-            function checkCollisions() {
-                const col = Math.floor(player.x / CELL_SIZE);
-                const row = Math.floor(player.y / CELL_SIZE);
-                
-                // Comer puntos
-                if (MAP[row][col] === 2) {
-                    MAP[row][col] = 0;
-                    score += 10;
-                    scoreElement.textContent = score;
-                } else if (MAP[row][col] === 3) {
-                    MAP[row][col] = 0;
-                    score += 50;
-                    scoreElement.textContent = score;
-                    ghosts.forEach(ghost => {
-                        ghost.scared = true;
-                        setTimeout(() => { ghost.scared = false; }, 5000);
-                    });
-                }
-                
-                // Colisión con fantasmas
-                ghosts.forEach(ghost => {
-                    const distance = Math.sqrt(
-                        Math.pow(player.x - ghost.x, 2) + 
-                        Math.pow(player.y - ghost.y, 2)
-                    );
-                    
-                    if (distance < player.radius + ghost.radius) {
-                        if (ghost.scared) {
-                            // Comer fantasma
-                            ghost.x = 9 * CELL_SIZE;
-                            ghost.y = 9 * CELL_SIZE;
-                            ghost.scared = false;
-                            score += 200;
-                            scoreElement.textContent = score;
-                        } else {
-                            // Perder vida
-                            lives--;
-                            livesElement.textContent = lives;
-                            
-                            if (lives <= 0) {
-                                gameOver = true;
-                                alert(`Game Over! Puntuación: ${score}`);
-                                resetGame();
-                            } else {
-                                resetPositions();
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Reiniciar posiciones
-            function resetPositions() {
-                player.x = 14 * CELL_SIZE;
-                player.y = 17 * CELL_SIZE;
-                player.direction = "left";
-                player.nextDirection = "left";
-                
-                ghosts[0].x = 9 * CELL_SIZE;
-                ghosts[0].y = 7 * CELL_SIZE;
-                ghosts[1].x = 10 * CELL_SIZE;
-                ghosts[1].y = 7 * CELL_SIZE;
-                ghosts[2].x = 9 * CELL_SIZE;
-                ghosts[2].y = 8 * CELL_SIZE;
-                
-                ghosts.forEach(ghost => ghost.scared = false);
-            }
-            
-            // Reiniciar juego completo
-            function resetGame() {
-                score = 0;
-                lives = 3;
-                scoreElement.textContent = score;
-                livesElement.textContent = lives;
-                resetPositions();
-                gameOver = false;
-                
-                // Restaurar puntos en el mapa
-                for (let row = 0; row < MAP.length; row++) {
-                    for (let col = 0; col < MAP[row].length; col++) {
-                        if (MAP[row][col] === 0) {
-                            // Restaurar puntos pequeños donde no hay paredes ni power-ups
-                            if (row > 0 && row < MAP.length - 1 && 
-                                col > 0 && col < MAP[row].length - 1) {
-                                MAP[row][col] = 2;
-                            }
-                        }
-                    }
-                }
-                
-                // Restaurar power-ups en sus posiciones originales
-                MAP[3][1] = 3;
-                MAP[3][18] = 3;
-                MAP[14][1] = 3;
-                MAP[14][18] = 3;
-                MAP[17][1] = 3;
-                MAP[17][16] = 3;
-            }
-            
-            // Botón de descarga
-            document.getElementById('downloadBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                alert("Para obtener el juego completo en Python, guarda el código Pygame que te proporcioné como un archivo .py y ejecútalo con Python instalado.");
-            });
-            
-            // Bucle del juego
-            function gameLoop() {
-                if (gameOver) return;
-                
-                ctx.clearRect(0, 0, WIDTH, HEIGHT);
-                drawMap();
-                
-                player.move();
-                player.draw();
-                
-                ghosts.forEach(ghost => {
-                    ghost.move(player);
-                    ghost.draw();
-                });
-                
-                checkCollisions();
-                
-                requestAnimationFrame(gameLoop);
-            }
-            
-            // Iniciar el juego
-            gameLoop();
         });
+    }
+
+    function isWall(x, y) {
+        let col = Math.floor(x / CELL_SIZE);
+        let row = Math.floor(y / CELL_SIZE);
+        return MAP[row][col] === 1;
+    }
+
+    function drawMap() {
+        for (let r = 0; r < MAP.length; r++) {
+            for (let c = 0; c < MAP[r].length; c++) {
+                let x = c * CELL_SIZE;
+                let y = r * CELL_SIZE;
+                if (MAP[r][c] === 1) {
+                    ctx.fillStyle = COLORS.wall;
+                    ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                } else if (MAP[r][c] === 2) {
+                    ctx.fillStyle = COLORS.dot;
+                    ctx.beginPath();
+                    ctx.arc(x + CELL_SIZE/2, y + CELL_SIZE/2, 3, 0, Math.PI*2);
+                    ctx.fill();
+                } else if (MAP[r][c] === 3) {
+                    ctx.fillStyle = COLORS.powerUp;
+                    ctx.beginPath();
+                    ctx.arc(x + CELL_SIZE/2, y + CELL_SIZE/2, 6, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+
+    function drawPlayer() {
+        ctx.fillStyle = COLORS.player;
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    function drawGhosts() {
+        ghosts.forEach(ghost => {
+            ctx.fillStyle = ghost.scared ? COLORS.scaredGhost : ghost.color;
+            ctx.beginPath();
+            ctx.arc(ghost.x, ghost.y, ghost.radius, 0, Math.PI*2);
+            ctx.fill();
+        });
+    }
+
+    function drawUI() {
+        ctx.fillStyle = 'white';
+        ctx.fillText(`Puntos: ${score}`, 10, HEIGHT-30);
+        ctx.fillText(`Vidas: ${lives}`, WIDTH-80, HEIGHT-30);
+    }
+
+    function checkCollisions() {
+        let col = Math.floor(player.x / CELL_SIZE);
+        let row = Math.floor(player.y / CELL_SIZE);
+
+        if (MAP[row][col] === 2) {
+            MAP[row][col] = 0;
+            score += 10;
+        } else if (MAP[row][col] === 3) {
+            MAP[row][col] = 0;
+            score += 50;
+            ghosts.forEach(g => g.scared = true);
+        }
+
+        ghosts.forEach(ghost => {
+            let dist = Math.hypot(player.x - ghost.x, player.y - ghost.y);
+            if (dist < player.radius + ghost.radius) {
+                if (ghost.scared) {
+                    ghost.x = 9 * CELL_SIZE;
+                    ghost.y = 7 * CELL_SIZE;
+                    ghost.scared = false;
+                    score += 200;
+                } else {
+                    lives--;
+                    if (lives <= 0) {
+                        alert('¡Game Over!');
+                        document.location.reload();
+                    }
+                    player.x = 14 * CELL_SIZE;
+                    player.y = 17 * CELL_SIZE;
+                }
+            }
+        });
+    }
+
+    function updateSpeedBasedOnScore() {
+        let multiplier = 1 + (score / 2000);
+        player.speed = 2 * Math.min(multiplier, 2.5);
+        ghosts.forEach(g => g.speed = 1 * Math.min(multiplier, 2.5));
+    }
+
+    function noDotsLeft() {
+        for (let r = 0; r < MAP.length; r++) {
+            for (let c = 0; c < MAP[r].length; c++) {
+                if (MAP[r][c] === 2 || MAP[r][c] === 3) return false;
+            }
+        }
+        return true;
+    }
+
+    function resetMap() {
+        MAP = JSON.parse(JSON.stringify(INITIAL_MAP));
+    }
+
+    gameLoop();
     </script>
+
 </body>
 </html>
